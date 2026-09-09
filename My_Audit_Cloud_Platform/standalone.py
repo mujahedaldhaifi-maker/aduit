@@ -459,6 +459,7 @@ class QualityGateEnforcer:
 def populate_sample_audit():
     init_database()
     conn = get_db_connection()
+    conn.execute("PRAGMA foreign_keys = OFF;")
 
     # 1. Client
     client_id = "CL-RUWAD-01"
