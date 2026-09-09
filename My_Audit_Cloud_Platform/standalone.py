@@ -767,10 +767,16 @@ class MyAuditHTTPHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.end_headers()
-template_path = os.path.join(os.path.dirname(__file__), 'my_audit', 'web', 'templates', 'index.html')
-if os.path.exists(template_path):
-                with open(template_path, 'rb') as f:
-                    self.wfile.write(f.read())
+found_content = None
+         for root, dirs, files in os.walk(os.path.dirname(__file__)):
+             if 'index.html' in files:
+                 with open(os.path.join(root, 'index.html'), 'rb') as f:
+                     found_content = f.read()
+                 break
+         if found_content:
+             self.wfile.write(found_content)
+         else:
+             self.wfile.write("<h1>منظومة ماي أودت تعمل بنجاح</h1>".encode('utf-8'))
             else:
                 self.wfile.write("<h1>منظومة ماي أودت تعمل بنجاح</h1>".encode('utf-8'))
         elif path == '/api/dashboard/summary':
