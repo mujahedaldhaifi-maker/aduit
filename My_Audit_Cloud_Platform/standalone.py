@@ -767,8 +767,8 @@ class MyAuditHTTPHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.end_headers()
-            template_path = '/mnt/agentdata/tiered/c_e947e45d4369e070/my_audit/my_audit/web/templates/index.html'
-            if os.path.exists(template_path):
+template_path = os.path.join(os.path.dirname(__file__), 'my_audit', 'web', 'templates', 'index.html')
+if os.path.exists(template_path):
                 with open(template_path, 'rb') as f:
                     self.wfile.write(f.read())
             else:
