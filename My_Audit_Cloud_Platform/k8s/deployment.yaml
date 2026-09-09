@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myaudit-cloud-deployment
+  labels:
+    app: myaudit-platform
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myaudit-platform
+  template:
+    metadata:
+      labels:
+        app: myaudit-platform
+    spec:
+      containers:
+      - name: myaudit-app
+        image: myaudit/cloud-platform:v1.0.0
+        ports:
+        - containerPort: 8000
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: myaudit-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: myaudit-secrets
+              key: redis-url
+        - name: STORAGE_BACKEND
+          value: "s3"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myaudit-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8000
+  selector:
+    app: myaudit-platform
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myaudit-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - audit.yourfirm.sa
+    secretName: myaudit-tls-cert
+  rules:
+  - host: audit.yourfirm.sa
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: myaudit-service
+            port:
+              number: 80
